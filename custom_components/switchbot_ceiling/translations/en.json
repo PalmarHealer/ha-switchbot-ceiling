@@ -52,6 +52,7 @@
         "state_attributes": {
           "effect": {
             "state": {
+              "off": "No effect",
               "segment_flow": "Segments: Flow",
               "segment_rebound": "Segments: Rebound",
               "segment_breath": "Segments: Breath",
@@ -65,46 +66,25 @@
         }
       }
     },
-    "select": {
-      "fade_on": {
-        "name": "Switch-on fade",
-        "state": {
-          "default": "Device default",
-          "0": "Instant",
-          "5": "5 s",
-          "15": "15 s",
-          "30": "30 s",
-          "60": "1 min",
-          "300": "5 min",
-          "600": "10 min",
-          "1800": "30 min",
-          "3600": "1 h"
-        }
-      },
-      "fade_off": {
-        "name": "Switch-off fade",
-        "state": {
-          "default": "Device default",
-          "0": "Instant",
-          "5": "5 s",
-          "15": "15 s",
-          "30": "30 s",
-          "60": "1 min",
-          "300": "5 min",
-          "600": "10 min",
-          "1800": "30 min",
-          "3600": "1 h"
-        }
-      }
-    },
     "number": {
       "effect_speed": {
         "name": "Effect speed"
+      },
+      "fade_on": {
+        "name": "Switch-on fade"
+      },
+      "fade_off": {
+        "name": "Switch-off fade"
       }
     },
     "text": {
       "segment_colors": {
         "name": "Effect colors"
+      }
+    },
+    "switch": {
+      "custom_fades": {
+        "name": "Custom fades"
       }
     }
   }

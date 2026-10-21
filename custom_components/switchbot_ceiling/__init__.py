@@ -10,7 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import CONF_ENCRYPTION_KEY, CONF_KEY_ID
 from .coordinator import CeilingConfigEntry, CeilingCoordinator, CeilingDevice
 
-PLATFORMS = [Platform.LIGHT, Platform.NUMBER, Platform.SELECT, Platform.TEXT]
+PLATFORMS = [Platform.LIGHT, Platform.NUMBER, Platform.SWITCH, Platform.TEXT]
 
 async def async_setup_entry(hass: HomeAssistant, entry: CeilingConfigEntry) -> bool:
     """Set up the ceiling light from a config entry."""

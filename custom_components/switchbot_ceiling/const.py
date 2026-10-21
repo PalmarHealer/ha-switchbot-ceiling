@@ -28,19 +28,9 @@ MAX_SEGMENT_COLORS = 10
 DEFAULT_SEGMENT_COLORS = "FF0000,00FF00,0000FF"
 DEFAULT_SPEED = 50
 
-# Fade choices of the device timer (seconds); None = firmware default.
-FADE_OPTIONS = {
-    "default": None,
-    "0": 0,
-    "5": 5,
-    "15": 15,
-    "30": 30,
-    "60": 60,
-    "300": 300,
-    "600": 600,
-    "1800": 1800,
-    "3600": 3600,
-}
+# Fade times (seconds) for switching on/off via the device timer.
+DEFAULT_FADE = 0
+MAX_FADE = 3600
 
 # Timer actions per sub-light (same encoding as the sub-light selector).
 ACTION_KEEP = 0

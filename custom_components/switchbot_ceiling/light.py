@@ -24,6 +24,7 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
+    EFFECT_OFF,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -186,7 +187,7 @@ class CeilingWhiteLight(CeilingEntity):
         elif kelvin is not None:
             commands.append(f"{CMD}10{kelvin:04X}")
         if not self.is_on:
-            fade = _fade(kwargs, self.coordinator.fade_on)
+            fade = _fade(kwargs, self.coordinator, self.coordinator.fade_on)
             if fade is None:
                 commands.append(WHITE_ON)
             else:
@@ -195,7 +196,7 @@ class CeilingWhiteLight(CeilingEntity):
 
     @_handle_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
-        fade = _fade(kwargs, self.coordinator.fade_off)
+        fade = _fade(kwargs, self.coordinator, self.coordinator.fade_off)
         if fade is None:
             command = WHITE_OFF
         else:
@@ -228,9 +229,11 @@ class CeilingColorLight(CeilingEntity):
 
     @property
     def effect_list(self) -> list[str] | None:
-        return [SEGMENT_EFFECT_PREFIX + style for style in SEGMENT_STYLES] + list(
-            self._device.get_effect_list or []
-        )
+        return [
+            EFFECT_OFF,
+            *(SEGMENT_EFFECT_PREFIX + style for style in SEGMENT_STYLES),
+            *(self._device.get_effect_list or []),
+        ]
 
     @property
     def effect(self) -> str | None:
@@ -239,12 +242,16 @@ class CeilingColorLight(CeilingEntity):
         )
         if not in_effect:
             self._effect = None
-        return self._effect
+        return self._effect or EFFECT_OFF
 
     @_handle_errors
     async def async_turn_on(self, **kwargs: Any) -> None:
         commands: list[str] = []
         state: dict[str, Any] = {"on": True}
+        if kwargs.get(ATTR_EFFECT) == EFFECT_OFF and ATTR_RGB_COLOR not in kwargs:
+            # Leave the effect by re-applying the last static color.
+            kwargs[ATTR_RGB_COLOR] = self._device.rgb or (255, 255, 255)
+            del kwargs[ATTR_EFFECT]
         if (effect := kwargs.get(ATTR_EFFECT)) is not None:
             if effect.startswith(SEGMENT_EFFECT_PREFIX):
                 commands += self.coordinator.segment_effect_commands(
@@ -266,7 +273,7 @@ class CeilingColorLight(CeilingEntity):
             commands.append(f"{CMD}14{_to_pct(kwargs[ATTR_BRIGHTNESS]):02X}")
             state["brightness"] = kwargs[ATTR_BRIGHTNESS]
         if not self.is_on:
-            fade = _fade(kwargs, self.coordinator.fade_on)
+            fade = _fade(kwargs, self.coordinator, self.coordinator.fade_on)
             if fade is None:
                 commands.append(COLOR_ON)
             else:
@@ -275,7 +282,7 @@ class CeilingColorLight(CeilingEntity):
 
     @_handle_errors
     async def async_turn_off(self, **kwargs: Any) -> None:
-        fade = _fade(kwargs, self.coordinator.fade_off)
+        fade = _fade(kwargs, self.coordinator, self.coordinator.fade_off)
         if fade is None:
             command = COLOR_OFF
         else:
@@ -307,8 +314,10 @@ class CeilingColorLight(CeilingEntity):
         )
 
 
-def _fade(kwargs: dict[str, Any], default: int | None) -> int | None:
-    """Transition of the call, else the configured default (None = firmware)."""
+def _fade(
+    kwargs: dict[str, Any], coordinator: CeilingCoordinator, default: int
+) -> int | None:
+    """Transition of the call, else the configured fade (None = lamp default)."""
     if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
         return round(transition)
-    return default
+    return default if coordinator.custom_fades else None

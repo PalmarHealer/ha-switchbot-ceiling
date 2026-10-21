@@ -18,6 +18,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     ACTION_KEEP,
+    DEFAULT_FADE,
     DEFAULT_SEGMENT_COLORS,
     DEFAULT_SPEED,
     MODEL,
@@ -70,8 +71,9 @@ class CeilingCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         # User settings, owned by the select/number/text entities.
         self.segment_colors: str = DEFAULT_SEGMENT_COLORS
         self.effect_speed: int = DEFAULT_SPEED
-        self.fade_on: int | None = None
-        self.fade_off: int | None = None
+        self.custom_fades = False
+        self.fade_on: int = DEFAULT_FADE
+        self.fade_off: int = DEFAULT_FADE
 
     @callback
     def _needs_poll(
