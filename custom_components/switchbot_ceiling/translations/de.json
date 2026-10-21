@@ -1,0 +1,111 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Deckenlampe auswählen.",
+        "data": {
+          "address": "Gerät"
+        }
+      },
+      "choose_method": {
+        "description": "{name} verschlüsselt seine Bluetooth-Befehle. Wie soll der Schlüssel kommen?",
+        "menu_options": {
+          "auth": "Mit SwitchBot-Konto abholen",
+          "key": "Schlüssel manuell eingeben"
+        }
+      },
+      "auth": {
+        "description": "Die SwitchBot-Anmeldung wird nur einmal zum Abholen des Schlüssels für {name} benutzt und nicht gespeichert. {error_detail}",
+        "data": {
+          "username": "Benutzername",
+          "password": "Passwort"
+        }
+      },
+      "key": {
+        "description": "Schlüssel-ID und Schlüssel für {name} eingeben.",
+        "data": {
+          "key_id": "Schlüssel-ID",
+          "encryption_key": "Schlüssel"
+        }
+      }
+    },
+    "error": {
+      "auth_failed": "Anmeldung fehlgeschlagen.",
+      "api_error": "Fehler der SwitchBot-API.",
+      "encryption_key_invalid": "Schlüssel-ID oder Schlüssel ungültig.",
+      "unknown": "Unerwarteter Fehler."
+    },
+    "abort": {
+      "already_configured": "Gerät ist bereits eingerichtet.",
+      "no_devices_found": "Keine RGBICWW-Deckenlampe per Bluetooth gefunden.",
+      "not_supported": "Gerät wird nicht unterstützt."
+    }
+  },
+  "entity": {
+    "light": {
+      "white": {
+        "name": "Weiß"
+      },
+      "color": {
+        "name": "Farbe",
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "segment_flow": "Segmente: Fluss",
+              "segment_rebound": "Segmente: Springen",
+              "segment_breath": "Segmente: Atmen",
+              "segment_cover": "Segmente: Überlagern",
+              "segment_pile": "Segmente: Stapeln",
+              "segment_wave": "Segmente: Welle",
+              "segment_flash": "Segmente: Blinken",
+              "segment_comet": "Segmente: Komet"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "fade_on": {
+        "name": "Einschalt-Übergang",
+        "state": {
+          "default": "Lampen-Standard",
+          "0": "Sofort",
+          "5": "5 s",
+          "15": "15 s",
+          "30": "30 s",
+          "60": "1 min",
+          "300": "5 min",
+          "600": "10 min",
+          "1800": "30 min",
+          "3600": "1 h"
+        }
+      },
+      "fade_off": {
+        "name": "Ausschalt-Übergang",
+        "state": {
+          "default": "Lampen-Standard",
+          "0": "Sofort",
+          "5": "5 s",
+          "15": "15 s",
+          "30": "30 s",
+          "60": "1 min",
+          "300": "5 min",
+          "600": "10 min",
+          "1800": "30 min",
+          "3600": "1 h"
+        }
+      }
+    },
+    "number": {
+      "effect_speed": {
+        "name": "Effekt-Geschwindigkeit"
+      }
+    },
+    "text": {
+      "segment_colors": {
+        "name": "Effekt-Farben"
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "domain": "switchbot_ceiling",
+  "name": "SwitchBot RGBICWW Ceiling Light",
+  "bluetooth": [
+    {
+      "connectable": true,
+      "manufacturer_id": 2409
+    }
+  ],
+  "codeowners": [
+    "@PalmarHealer"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "bluetooth_adapters"
+  ],
+  "documentation": "https://github.com/PalmarHealer/ha-switchbot-ceiling",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/PalmarHealer/ha-switchbot-ceiling/issues",
+  "loggers": [
+    "switchbot"
+  ],
+  "requirements": [
+    "PySwitchbot==2.3.0"
+  ],
+  "version": "0.1.0"
+}

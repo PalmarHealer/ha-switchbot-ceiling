@@ -1,0 +1,32 @@
+set_segment_effect:
+  target:
+    entity:
+      integration: switchbot_ceiling
+      domain: light
+  fields:
+    effect:
+      required: true
+      selector:
+        select:
+          options: [flow, rebound, breath, cover, pile, wave, flash, comet]
+    colors:
+      required: true
+      example: "[[255, 0, 0], [0, 255, 0], [0, 0, 255]]"
+      selector:
+        object:
+    speed:
+      selector:
+        number:
+          min: 0
+          max: 255
+send_command:
+  target:
+    entity:
+      integration: switchbot_ceiling
+      domain: light
+  fields:
+    command:
+      required: true
+      example: "570F4A01"
+      selector:
+        text:
