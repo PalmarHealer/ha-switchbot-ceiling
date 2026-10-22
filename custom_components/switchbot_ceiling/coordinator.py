@@ -6,7 +6,10 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
+import bleak_retry_connector
 import switchbot
+from bleak.exc import BleakDBusError
+from switchbot.devices.device import CharacteristicMissingError
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.active_update_coordinator import (
@@ -35,6 +38,13 @@ DEVICE_STARTUP_TIMEOUT = 30
 IDLE_DISCONNECT = 3600
 KEEPALIVE_INTERVAL = 20
 STATUS_COMMAND = "570F4A01"
+# Keep-alive failures in a row before the GATT cache is dropped anyway.
+MAX_KEEPALIVE_FAILURES = 3
+# GATT object paths bleak cached from an earlier connection are gone.
+STALE_GATT_ERRORS = (
+    "org.freedesktop.DBus.Error.UnknownObject",
+    "org.freedesktop.DBus.Error.UnknownMethod",
+)
 
 type CeilingConfigEntry = ConfigEntry[CeilingCoordinator]
 
@@ -146,13 +156,20 @@ class CeilingCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
 
     async def async_keep_connected(self) -> None:
         """Reconnect in the background so commands never wait for a connect."""
+        failures = 0
         while True:
             client = self.device._client  # noqa: SLF001
             if not (client and client.is_connected):
                 try:
                     await self.device._send_command(STATUS_COMMAND)  # noqa: SLF001
                 except Exception as err:  # noqa: BLE001
-                    _LOGGER.debug("Keep-alive connect failed: %s", err)
+                    failures += 1
+                    _LOGGER.debug("Keep-alive connect failed (%s): %s", failures, err)
+                    if failures >= MAX_KEEPALIVE_FAILURES:
+                        failures = 0
+                        await self.device.async_reset_gatt_cache()
+                else:
+                    failures = 0
             await asyncio.sleep(KEEPALIVE_INTERVAL)
 
     def fade_command(
@@ -205,6 +222,36 @@ class CeilingDevice(switchbot.SwitchbotRgbicwwCeilingLight):
         task = asyncio.get_running_loop().create_task(self._release(client))
         self._release_tasks.add(task)
         task.add_done_callback(self._release_tasks.discard)
+
+    async def _send_command_locked(self, key: str, command: bytes) -> bytes:
+        """Drop a stale GATT cache instead of retrying it forever.
+
+        bleak reuses the GATT objects of the last connection, and its cache
+        check only looks at service paths. When BlueZ re-enumerates the
+        characteristics, every write hits a path that no longer exists. The
+        library's own clear_cache() is a no-op on bleak 3, so the light stayed
+        unreachable until Home Assistant was restarted.
+        """
+        try:
+            return await super()._send_command_locked(key, command)
+        except BleakDBusError as err:
+            if err.dbus_error in STALE_GATT_ERRORS:
+                _LOGGER.warning("%s: stale GATT cache (%s)", self.name, err.dbus_error)
+                await self.async_reset_gatt_cache()
+            raise
+        except CharacteristicMissingError:
+            await self.async_reset_gatt_cache()
+            raise
+
+    async def async_reset_gatt_cache(self) -> None:
+        """Disconnect and make BlueZ and bleak resolve the services anew."""
+        await self._execute_forced_disconnect()
+        try:
+            cleared = await bleak_retry_connector.clear_cache(self._device.address)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("%s: clearing the GATT cache failed: %s", self.name, err)
+        else:
+            _LOGGER.info("%s: GATT cache cleared: %s", self.name, cleared)
 
     @staticmethod
     async def _release(client) -> None:
