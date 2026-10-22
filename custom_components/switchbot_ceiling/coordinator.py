@@ -189,6 +189,30 @@ class CeilingCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
 class CeilingDevice(switchbot.SwitchbotRgbicwwCeilingLight):
     """Library device that keeps its BLE connection instead of 8.5 s idle."""
 
+    _release_tasks: set[asyncio.Task] = set()
+
+    def _disconnected(self, client) -> None:
+        """Release the D-Bus connection of a link the light dropped.
+
+        bleak only closes a client's D-Bus connection in disconnect(), which
+        the library never calls after an unexpected drop. With the keep-alive
+        reconnecting every drop, the leaked connections reached the system
+        bus limit (256 per user) and every new connect failed with EOFError.
+        """
+        super()._disconnected(client)
+        if self._expected_disconnect:
+            return
+        task = asyncio.get_running_loop().create_task(self._release(client))
+        self._release_tasks.add(task)
+        task.add_done_callback(self._release_tasks.discard)
+
+    @staticmethod
+    async def _release(client) -> None:
+        try:
+            await client.disconnect()
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug("Releasing dropped connection failed: %s", err)
+
     def _reset_disconnect_timer(self) -> None:
         self._cancel_disconnect_timer()
         self._expected_disconnect = False
